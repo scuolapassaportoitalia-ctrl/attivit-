@@ -18,8 +18,10 @@ const ATTIVITA = [
     livello: "A1–A2", icona: "🏰", info: "10 sospettati · si gioca su ogni telefono" },
 
   // ATTIVITÀ
+  { titolo: "Degustazione: olio e territorio", file: "degustazione-olio-territorio.html", sezione: "attivita", gruppo: "oro-verde",
+    livello: "A2", icona: "🌳", info: "Slide teoriche e schede da compilare sul paesaggio e la degustazione", nuovo: true },
   { titolo: "L'olio misterioso", file: "olio-misterioso.html", sezione: "attivita", gruppo: "oro-verde",
-    livello: "A1–A2", icona: "🫒", info: "Slide teoriche e schede da compilare, poi degustazione e gioco di ruolo", nuovo: true },
+    livello: "A1–A2", icona: "🫒", info: "Osservare, annusare, assaggiare: le parole della degustazione", nuovo: true },
   { titolo: "Il gioco dell'olio pugliese", file: "gioco-olio-pugliese.html", sezione: "attivita", gruppo: "oro-verde",
     livello: "A2", icona: "🎲", info: "Gioco a squadre per la classe", nuovo: true },
 ];
