@@ -19,7 +19,7 @@ const ATTIVITA = [
 
   // ATTIVITÀ
   { titolo: "L'olio misterioso", file: "olio-misterioso.html", sezione: "attivita", gruppo: "oro-verde",
-    livello: "A1–A2", icona: "🫒", info: "Osservare, annusare, assaggiare: le parole della degustazione", nuovo: true },
+    livello: "A1–A2", icona: "🫒", info: "Slide teoriche e schede da compilare, poi degustazione e gioco di ruolo", nuovo: true },
   { titolo: "Il gioco dell'olio pugliese", file: "gioco-olio-pugliese.html", sezione: "attivita", gruppo: "oro-verde",
     livello: "A2", icona: "🎲", info: "Gioco a squadre per la classe", nuovo: true },
 ];
