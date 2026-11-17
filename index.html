@@ -26,7 +26,11 @@
   .chips button[aria-pressed="true"] { background:var(--green); border-color:var(--green); color:#fff; }
   .count { color:var(--muted); font-size:13px; margin:6px 0 12px; }
   button:focus-visible, a:focus-visible, input:focus-visible { outline:3px solid var(--green); outline-offset:2px; }
-  h2 { font-size:13px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin:18px 0 8px; }
+  .sez { margin-top:22px; }
+  h2 { font-size:22px; margin:0 0 2px; padding-top:14px; border-top:3px solid var(--lime); }
+  .grp { background:var(--soft); border-radius:18px; padding:4px 12px 12px; margin-top:12px; }
+  h3 { font-size:17px; margin:10px 0 2px; color:var(--green); }
+  .desc { color:var(--muted); font-size:14px; margin:0 0 10px; }
   .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:10px; }
   a.card { display:flex; flex-direction:column; gap:4px; padding:14px; border:1px solid var(--line); background:var(--card);
            color:inherit; text-decoration:none; border-radius:16px; min-height:120px; }
@@ -48,12 +52,12 @@
     <img class="logo" src="logo.png" alt="Passaporto Italia · Scuola di lingua e cultura italiana" width="900" height="331">
     <div>
       <h1>Attività di italiano</h1>
-      <p class="sub">Gialli, giochi e lezioni di italiano L2 da fare online</p>
+      <p class="sub">Escape room, lezioni e giochi di italiano L2 da fare online</p>
     </div>
   </header>
 
   <input type="search" id="q" placeholder="Cerca un'attività…" aria-label="Cerca un'attività">
-  <div class="chips" id="tipi" role="group" aria-label="Tipo"></div>
+  <div class="chips" id="sezioni" role="group" aria-label="Sezione"></div>
   <div class="chips" id="livelli" role="group" aria-label="Livello"></div>
   <p class="count" id="count" aria-live="polite"></p>
   <div id="lista"></div>
@@ -63,63 +67,75 @@
 <script src="attivita.js"></script>
 <script>
 (function () {
-  var stato = { q: "", tipo: "", livello: "" };
+  var stato = { q: "", sezione: "", livello: "" };
   var $ = function (id) { return document.getElementById(id); };
   var norm = function (s) { return (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); };
+  function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
 
   function chip(box, etichetta, chiave, valore) {
-    var b = document.createElement("button");
-    b.type = "button"; b.textContent = etichetta;
+    var b = el("button", "", etichetta); b.type = "button";
     b.setAttribute("aria-pressed", stato[chiave] === valore);
     b.onclick = function () { stato[chiave] = valore; disegna(); };
     box.appendChild(b);
   }
-
   function livelliDi(a) { return (a.livello || "").split(/[–-]/).map(function (x) { return x.trim(); }); }
 
+  function scheda(a) {
+    var c = el("a", "card"); c.href = a.file;
+    c.appendChild(el("span", "ic", a.icona || "📄"));
+    c.appendChild(el("b", "", a.titolo));
+    c.appendChild(el("small", "", a.info || ""));
+    var tags = el("span", "tags");
+    if (a.livello) tags.appendChild(el("span", "lv", a.livello));
+    if (a.nuovo) tags.appendChild(el("span", "new", "NUOVO"));
+    c.appendChild(tags);
+    return c;
+  }
+  function griglia(lista) { var g = el("div", "grid"); lista.forEach(function (a) { g.appendChild(scheda(a)); }); return g; }
+
   function disegna() {
-    var tipi = $("tipi"), livelli = $("livelli");
-    tipi.innerHTML = ""; livelli.innerHTML = "";
-    chip(tipi, "Tutte", "tipo", "");
-    Object.keys(TIPI).forEach(function (k) {
-      if (ATTIVITA.some(function (a) { return a.tipo === k; })) chip(tipi, TIPI[k].icona + " " + TIPI[k].nome, "tipo", k);
-    });
+    var sez = $("sezioni"), liv = $("livelli");
+    sez.innerHTML = ""; liv.innerHTML = "";
+    chip(sez, "Tutto", "sezione", "");
+    Object.keys(SEZIONI).forEach(function (k) { chip(sez, SEZIONI[k].icona + " " + SEZIONI[k].nome, "sezione", k); });
     var tutti = [];
     ATTIVITA.forEach(function (a) { livelliDi(a).forEach(function (l) { if (l && tutti.indexOf(l) < 0) tutti.push(l); }); });
     tutti.sort();
-    chip(livelli, "Tutti i livelli", "livello", "");
-    tutti.forEach(function (l) { chip(livelli, l, "livello", l); });
+    chip(liv, "Tutti i livelli", "livello", "");
+    tutti.forEach(function (l) { chip(liv, l, "livello", l); });
 
     var q = norm(stato.q);
     var scelte = ATTIVITA.filter(function (a) {
-      if (stato.tipo && a.tipo !== stato.tipo) return false;
+      if (stato.sezione && a.sezione !== stato.sezione) return false;
       if (stato.livello && livelliDi(a).indexOf(stato.livello) < 0) return false;
-      if (q && norm([a.titolo, a.info, a.tema, a.livello, (TIPI[a.tipo] || {}).nome].join(" ")).indexOf(q) < 0) return false;
+      var g = GRUPPI[a.gruppo] || {}, s = SEZIONI[a.sezione] || {};
+      if (q && norm([a.titolo, a.info, a.livello, g.nome, s.nome].join(" ")).indexOf(q) < 0) return false;
       return true;
     });
 
     $("count").textContent = scelte.length === 1 ? "1 attività" : scelte.length + " attività";
     var lista = $("lista"); lista.innerHTML = "";
-    if (!scelte.length) { lista.innerHTML = '<p class="empty">Nessuna attività trovata.</p>'; return; }
+    if (!scelte.length) { lista.appendChild(el("p", "empty", "Nessuna attività trovata.")); return; }
 
-    var gruppi = {};
-    scelte.forEach(function (a) { (gruppi[a.tema || "Altro"] = gruppi[a.tema || "Altro"] || []).push(a); });
-    Object.keys(gruppi).forEach(function (tema) {
-      var h = document.createElement("h2"); h.textContent = tema; lista.appendChild(h);
-      var g = document.createElement("div"); g.className = "grid";
-      gruppi[tema].forEach(function (a) {
-        var c = document.createElement("a"); c.className = "card"; c.href = a.file;
-        var t = TIPI[a.tipo] || { nome: "" };
-        c.innerHTML = '<span class="ic"></span><b></b><small></small><span class="tags"></span>';
-        c.querySelector(".ic").textContent = a.icona || t.icona || "📄";
-        c.querySelector("b").textContent = a.titolo;
-        c.querySelector("small").textContent = a.info || "";
-        var tags = c.querySelector(".tags");
-        [t.nome, a.livello].forEach(function (x) { if (x) { var s = document.createElement("span"); s.className = "lv"; s.textContent = x; tags.appendChild(s); } });
-        if (a.nuovo) { var n = document.createElement("span"); n.className = "new"; n.textContent = "NUOVO"; tags.appendChild(n); }
-        g.appendChild(c);
+    Object.keys(SEZIONI).forEach(function (k) {
+      var qui = scelte.filter(function (a) { return a.sezione === k; });
+      if (!qui.length) return;
+      var S = SEZIONI[k], box = el("section", "sez");
+      box.appendChild(el("h2", "", S.icona + " " + S.nome));
+      if (S.descrizione) box.appendChild(el("p", "desc", S.descrizione));
+      var conGruppo = qui.filter(function (a) { return a.gruppo; });
+      var senza = qui.filter(function (a) { return !a.gruppo; });
+      var ordine = [];
+      conGruppo.forEach(function (a) { if (ordine.indexOf(a.gruppo) < 0) ordine.push(a.gruppo); });
+      ordine.forEach(function (gid) {
+        var G = GRUPPI[gid] || { nome: gid }, sg = el("div", "grp");
+        sg.appendChild(el("h3", "", (G.icona ? G.icona + " " : "") + G.nome));
+        if (G.descrizione) sg.appendChild(el("p", "desc", G.descrizione));
+        sg.appendChild(griglia(conGruppo.filter(function (a) { return a.gruppo === gid; })));
+        box.appendChild(sg);
       });
-      lista.appendChild(g);
+      if (senza.length) box.appendChild(griglia(senza));
+      lista.appendChild(box);
     });
   }
 
